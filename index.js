@@ -52,7 +52,29 @@ async function run() {
 
 
 
+  app.post('/allUsers/:email',async(req,res)=>{
 
+     const email=req.params.email;
+
+     const userInformation=req.body;
+
+
+     const alreadyEmail= await allUsersCollection.findOne({userEmail:email})
+
+    
+     
+     if(alreadyEmail){
+
+      return res.send({message:'allReady email exists '})
+     }
+  
+     const result= await allUsersCollection.insertOne(userInformation);
+
+
+     res.send(result)
+          
+   
+  })
 
 
 
