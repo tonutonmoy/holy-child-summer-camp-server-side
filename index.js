@@ -2,6 +2,7 @@ const express= require('express');
 const app = express();
 
 const cors= require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const port= process.env.PORT || 5000;
@@ -20,7 +21,29 @@ app.get('/',(req,res)=>{
 
 
 
+const verifyTokenJWT = (req, res, next) => {
 
+  const authorization = req.headers.authorization;
+
+  if (!authorization) {
+    return res.status(401).send({ error: true, message: 'unAuthorization access token' })
+  }
+
+  const token = authorization.split(' ')[1];
+
+  jwt.verify(token, process.env.JWT_TOKEN_SECRET, function (err, decoded) {
+
+
+    if (err) {
+      return res.status(401).send({ error: true, message: 'unAuthorization access token' })
+    }
+
+    req.decoded = decoded;
+
+
+    next();
+  });
+}
 
 
 
@@ -46,12 +69,25 @@ async function run() {
 
     const database = client.db("holyChildDb");
     const allUsersCollection = database.collection("allUsers");
+    const allClassesCollection = database.collection("allClasses");
 
 
 
 
 
+    // create Jwt
+    app.post('/jwt', (req, res) => {
 
+      const user = req.body;
+
+      const token = jwt.sign(user, process.env.JWT_TOKEN_SECRET, { expiresIn: '1h' })
+
+      res.send(token)
+    })
+
+
+
+// all users post 
   app.post('/allUsers/:email',async(req,res)=>{
 
      const email=req.params.email;
@@ -74,6 +110,41 @@ async function run() {
      res.send(result)
           
    
+  })
+
+
+  // all classes post 
+  app.post('/allClasses/:email',verifyTokenJWT,async(req,res)=>{
+
+
+
+    const verifyEmail= req.decoded.email;
+
+
+     const userEmail= req.params.email;
+
+
+     if(verifyEmail !== userEmail){
+
+      return res.status(403).send({ error: true, message: ' email not match' })
+
+    
+     }
+
+     
+
+    const addAClass=req.body;
+
+
+    
+   
+
+
+    const result= await allClassesCollection.insertOne(addAClass);
+
+    res.send(result)
+
+
   })
 
 
