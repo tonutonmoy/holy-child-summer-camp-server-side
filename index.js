@@ -148,6 +148,34 @@ async function run() {
   })
 
 
+  // all classes get
+
+  app.get('/allClasses/:email',verifyTokenJWT,async(req,res)=>{
+
+
+
+    const verifyEmail= req.decoded.email;
+
+
+     const userEmail= req.params.email;
+
+
+     if(verifyEmail !== userEmail){
+
+      return res.status(403).send({ error: true, message: ' email not match' })
+
+    
+     }
+
+     
+    const result= await allClassesCollection.find().toArray();
+
+    res.send(result)
+
+
+
+  })
+
 
 
 
