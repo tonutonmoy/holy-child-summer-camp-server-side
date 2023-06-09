@@ -176,6 +176,34 @@ async function run() {
 
   })
 
+  // get by instructor
+  app.get('/allClassesByInstructor/:email',verifyTokenJWT,async(req,res)=>{
+
+
+
+    const verifyEmail= req.decoded.email;
+
+
+     const userEmail= req.params.email;
+
+
+     if(verifyEmail !== userEmail){
+
+      return res.status(403).send({ error: true, message: ' email not match' })
+
+    
+     }
+     
+     const query={ instructorEmail:userEmail}
+     
+    const result= await allClassesCollection.find(query).toArray();
+
+    res.send(result)
+
+
+
+  })
+
 
 
 
