@@ -138,7 +138,24 @@ async function run() {
      res.send(result)
           
    
+  });
+
+
+  // allInstructors get
+
+  app.get('/allInstructors',async(req,res)=>{
+
+
+     const query={userRoll: 'instructor'}
+
+    const result= await allUsersCollection.find(query).toArray()
+
+    res.send(result)
+
   })
+
+
+
 
 
   // all classes post 
@@ -395,7 +412,7 @@ app.patch('/feedBack',verifyTokenJWT,async(req,res)=>{
   const feedback=req.body.feedback
 
 
-  console.log(feedback)
+
 
   
 
@@ -443,8 +460,7 @@ app.get('/allUsersRol/:email', verifyTokenJWT, async (req, res) => {
 
   const userEmail= req.params.email;
 
-  console.log(verifyEmail,userEmail)
-
+ 
 
   if(verifyEmail !== userEmail){
 
