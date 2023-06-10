@@ -48,7 +48,7 @@ const verifyTokenJWT = (req, res, next) => {
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.MONGODB_USER_NAME}:${process.env.MONGODB_USER_PASSWORD}@cluster0.andsvfa.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -233,6 +233,8 @@ async function run() {
   })
 
 
+
+
 //  make admin
 
 app.patch('/makeAdmin',verifyTokenJWT,async(req,res)=>{
@@ -269,6 +271,8 @@ app.patch('/makeAdmin',verifyTokenJWT,async(req,res)=>{
   res.send(result)
 })
 
+
+
 //  make instructor
 
 app.patch('/makeInstructor',verifyTokenJWT,async(req,res)=>{
@@ -303,7 +307,129 @@ app.patch('/makeInstructor',verifyTokenJWT,async(req,res)=>{
 
 
   res.send(result)
-})
+});
+
+
+// approve class
+app.patch('/approveClasses',verifyTokenJWT,async(req,res)=>{
+
+  const verifyEmail= req.decoded.email;
+
+
+  const adminEmail= req.query.adminEmail;
+
+  const userId=req.query.userId;
+
+  
+
+
+  if(verifyEmail !== adminEmail){
+
+   return res.status(403).send({ error: true, message: ' email not match' })
+
+ 
+  }
+
+    const filter={_id: new ObjectId(userId)}
+
+    const updateRole = {
+      $set: {
+        status: 'approve'
+      },
+
+    }
+
+    result= await allClassesCollection.updateOne(filter,updateRole)
+
+
+  res.send(result)
+});
+
+
+// deny class
+app.patch('/denyClasses',verifyTokenJWT,async(req,res)=>{
+
+  const verifyEmail= req.decoded.email;
+
+
+  const adminEmail= req.query.adminEmail;
+
+  const userId=req.query.userId;
+
+  
+
+
+  if(verifyEmail !== adminEmail){
+
+   return res.status(403).send({ error: true, message: ' email not match' })
+
+ 
+  }
+
+    const filter={_id: new ObjectId(userId)}
+
+    const updateRole = {
+      $set: {
+        status: 'deny'
+      },
+
+    }
+
+    result= await allClassesCollection.updateOne(filter,updateRole)
+
+
+  res.send(result)
+});
+
+
+//  feedBack
+app.patch('/feedBack',verifyTokenJWT,async(req,res)=>{
+
+  const verifyEmail= req.decoded.email;
+
+
+  const adminEmail= req.query.adminEmail;
+
+  const userId=req.query.userId;
+
+  const feedback=req.body.feedback
+
+
+  console.log(feedback)
+
+  
+
+
+  if(verifyEmail !== adminEmail){
+
+   return res.status(403).send({ error: true, message: ' email not match' })
+
+ 
+  }
+
+    const filter={_id: new ObjectId(userId)}
+
+    const updateRole = {
+      $set: {
+        feedBack: feedback
+      },
+
+    }
+
+    result= await allClassesCollection.updateOne(filter,updateRole)
+
+
+  res.send(result)
+});
+
+
+
+
+
+
+
+
+
 
 
 
@@ -338,6 +464,8 @@ app.get('/allUsersRol/:email', verifyTokenJWT, async (req, res) => {
   res.send(user)
 
 });
+
+
 
 
 
