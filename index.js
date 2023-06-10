@@ -70,6 +70,7 @@ async function run() {
     const database = client.db("holyChildDb");
     const allUsersCollection = database.collection("allUsers");
     const allClassesCollection = database.collection("allClasses");
+    const selectedClassesCollection = database.collection("selectedClasses");
 
 
 
@@ -182,7 +183,7 @@ async function run() {
 
     if(!singleUser){
 
-     return res.send({ error:true,message:'user not found'})
+     return res.send({ message:'user not found'})
     }
 
     if(singleUser?.userRoll){
@@ -260,7 +261,108 @@ async function run() {
 
 
 
-  })
+  });
+
+
+  // selected classes post
+
+  app.post('/selectedClasses/:email',verifyTokenJWT,async(req,res)=>{
+
+
+
+    const verifyEmail= req.decoded.email;
+
+
+     const userEmail= req.params.email;
+
+
+     if(verifyEmail !== userEmail){
+
+      return res.status(403).send({ error: true, message: ' email not match' })
+
+    
+     }
+
+     
+
+    const bookingData=req.body;
+
+
+   
+   
+
+
+    const result= await selectedClassesCollection.insertOne(bookingData);
+
+    res.send(result)
+
+
+  });
+
+
+  // my selected classes get
+
+  app.get('/allSelectedClasses/:email',verifyTokenJWT,async(req,res)=>{
+
+
+    const verifyEmail= req.decoded.email;
+
+
+    const userEmail= req.params.email;
+
+
+    if(verifyEmail !== userEmail){
+
+     return res.status(403).send({ error: true, message: ' email not match' })
+
+   
+    }
+
+
+    const result= await selectedClassesCollection.find({userEmail:userEmail}).toArray()
+
+    res.send(result)
+
+  });
+
+
+
+  // my selected class delete
+  app.delete('/deleteSelectedClass',verifyTokenJWT,async(req,res)=>{
+
+
+  
+
+    const userEmail= req.query.userEmail
+
+
+    const verifyEmail= req.decoded.email;
+
+
+ 
+
+
+    if(verifyEmail !== userEmail){
+
+     return res.status(403).send({ error: true, message: ' email not match' })
+
+   
+    }
+
+    const id= req.query.id;
+    
+    const result= await selectedClassesCollection.deleteOne({_id: new ObjectId(id)})
+
+    res.send(result)
+
+    
+
+  });
+
+
+
+
+
 
   // get by instructor
   app.get('/allClassesByInstructor/:email',verifyTokenJWT,async(req,res)=>{
