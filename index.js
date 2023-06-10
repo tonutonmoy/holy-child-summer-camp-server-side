@@ -112,6 +112,34 @@ async function run() {
    
   })
 
+// all users get 
+  app.get('/allUsers/:email',verifyTokenJWT,async(req,res)=>{
+
+  
+
+
+    const verifyEmail= req.decoded.email;
+
+
+    const userEmail= req.params.email;
+
+   
+
+
+    if(verifyEmail !== userEmail){
+
+     return res.status(403).send({ error: true, message: ' email not match' })
+
+   
+    }
+     const result= await allUsersCollection.find().toArray();
+
+
+     res.send(result)
+          
+   
+  })
+
 
   // all classes post 
   app.post('/allClasses/:email',verifyTokenJWT,async(req,res)=>{
@@ -205,7 +233,111 @@ async function run() {
   })
 
 
+//  make admin
 
+app.patch('/makeAdmin',verifyTokenJWT,async(req,res)=>{
+
+  const verifyEmail= req.decoded.email;
+
+
+  const adminEmail= req.query.adminEmail;
+
+  const userEmail=req.query.userEmail;
+
+  
+
+
+  if(verifyEmail !== adminEmail){
+
+   return res.status(403).send({ error: true, message: ' email not match' })
+
+ 
+  }
+
+    const filter={userEmail:userEmail}
+
+    const updateRole = {
+      $set: {
+        userRoll: 'admin'
+      },
+
+    }
+
+    result= await allUsersCollection.updateOne(filter,updateRole)
+
+
+  res.send(result)
+})
+
+//  make instructor
+
+app.patch('/makeInstructor',verifyTokenJWT,async(req,res)=>{
+
+  const verifyEmail= req.decoded.email;
+
+
+  const adminEmail= req.query.adminEmail;
+
+  const userEmail=req.query.userEmail;
+
+  
+
+
+  if(verifyEmail !== adminEmail){
+
+   return res.status(403).send({ error: true, message: ' email not match' })
+
+ 
+  }
+
+    const filter={userEmail:userEmail}
+
+    const updateRole = {
+      $set: {
+        userRoll: 'instructor'
+      },
+
+    }
+
+    result= await allUsersCollection.updateOne(filter,updateRole)
+
+
+  res.send(result)
+})
+
+
+
+// user roll check
+
+
+app.get('/allUsersRol/:email', verifyTokenJWT, async (req, res) => {
+
+  const verifyEmail= req.decoded.email;
+
+
+  const userEmail= req.params.email;
+
+  console.log(verifyEmail,userEmail)
+
+
+  if(verifyEmail !== userEmail){
+
+   return res.status(403).send({ error: true, message: ' email not match' })
+
+ 
+  }
+
+
+  const query = { userEmail: userEmail };
+
+  const user = await allUsersCollection.findOne(query);
+
+
+
+
+  res.send(user)
+
+});
 
 
 
