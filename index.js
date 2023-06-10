@@ -152,9 +152,50 @@ async function run() {
 
     res.send(result)
 
-  })
+  });
 
 
+  // allApproveClasses get
+
+  app.get('/allApproveClasses',async(req,res)=>{
+
+
+     const query={status: 'approve'}
+
+    const result= await allClassesCollection.find(query).toArray()
+
+    res.send(result)
+
+  });
+
+
+  // checkingUser
+
+  app.get('/checkingUser/:email',async(req,res)=>{
+
+
+    const userEmail= req.params.email;
+
+
+    const singleUser= await allUsersCollection.findOne({userEmail:userEmail})
+
+
+    if(!singleUser){
+
+     return res.send({ error:true,message:'user not found'})
+    }
+
+    if(singleUser?.userRoll){
+
+      return res.send({message:singleUser?.userRoll})
+    }
+     
+  
+
+
+  
+
+ });
 
 
 
