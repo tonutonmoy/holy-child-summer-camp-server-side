@@ -4,6 +4,7 @@ const app = express();
 const cors= require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_PAYMENT_KEY);
 
 const port= process.env.PORT || 5000;
 
@@ -71,6 +72,7 @@ async function run() {
     const allUsersCollection = database.collection("allUsers");
     const allClassesCollection = database.collection("allClasses");
     const selectedClassesCollection = database.collection("selectedClasses");
+    const paymentHistoryClassesCollection = database.collection("paymentHistory");
 
 
 
@@ -359,6 +361,38 @@ async function run() {
 
   });
 
+  // my single selected class 
+  app.get('/SelectedSingleClass',verifyTokenJWT,async(req,res)=>{
+
+
+  
+
+    const userEmail= req.query.userEmail
+
+
+    const verifyEmail= req.decoded.email;
+
+
+ 
+
+
+    if(verifyEmail !== userEmail){
+
+     return res.status(403).send({ error: true, message: ' email not match' })
+
+   
+    }
+
+    const id= req.query.id;
+
+    const result= await selectedClassesCollection.findOne({_id: new ObjectId(id)})
+
+    res.send(result)
+
+    
+
+  });
+
 
 
 
@@ -623,6 +657,153 @@ app.get('/allUsersRol/:email', verifyTokenJWT, async (req, res) => {
   res.send(user)
 
 });
+
+
+// payment by stripe
+app.post('/create-payment-intent', verifyTokenJWT, async (req, res) => {
+  const { price } = req.body;
+
+  
+  const p = price * 100;
+
+  const amount = parseFloat(p.toFixed(2))
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amount,
+    currency: 'usd',
+    payment_method_types: ['card']
+  });
+
+
+
+  res.send({
+    clientSecret: paymentIntent.client_secret
+  })
+});
+
+
+// payment history
+
+app.post('/paymentHistory',verifyTokenJWT,async(req,res)=>{
+
+
+  const verifyEmail= req.decoded.email;
+
+
+  const userEmail= req.query.userEmail;
+
+ 
+
+  if(verifyEmail !== userEmail){
+
+   return res.status(403).send({ error: true, message: ' email not match' })
+
+ 
+  }
+
+
+
+   const deleteId= req.query.deleteId;
+   const updateId=req.query.updateId;
+
+
+   const paymentHistory= req.body;
+  // update seats
+   const singleClass= await allClassesCollection.findOne({_id: new ObjectId(updateId)}) 
+
+   const availableSeats=singleClass.availableSeats;
+
+   const totalStudent=singleClass.totalStudent;
+
+   if(availableSeats ===0){
+
+     return res.send({message:'sorry all seats are booked'})
+   }
+
+    const updateAvailableSeats= availableSeats - 1;
+
+    const updateTotalStudent= totalStudent + 1;
+
+  const filter={_id: new ObjectId(updateId)}
+
+    const updateRole = {
+      $set: {
+        availableSeats: updateAvailableSeats,
+        totalStudent: updateTotalStudent
+
+
+      },
+
+    };
+   
+
+    const updateSeats= await allClassesCollection.updateOne(filter,updateRole);
+
+
+  
+  if(updateSeats?.modifiedCount>0){
+
+    const  deletedData= await selectedClassesCollection.deleteOne({_id: new ObjectId(deleteId)});
+
+
+    if(deletedData.deletedCount>0){
+
+
+      const result =await paymentHistoryClassesCollection.insertOne(paymentHistory)
+
+      return res.send(result)
+
+    }
+
+    return res.send({message:"data not deleted"})
+  }
+
+
+
+    console.log(updateSeats)
+
+
+ 
+
+   
+
+
+});
+
+
+
+// enroll classes
+
+app.get('/enrollClasses/:email',verifyTokenJWT,async(req,res)=>{
+
+
+
+  const verifyEmail= req.decoded.email;
+
+
+   const userEmail= req.params.email;
+
+
+   if(verifyEmail !== userEmail){
+
+    return res.status(403).send({ error: true, message: ' email not match' })
+
+  
+   }
+   
+   const query={ email:userEmail}
+   
+  const result= await paymentHistoryClassesCollection.find(query).toArray();
+
+  res.send(result)
+
+
+
+})
+
+
+
+
 
 
 
