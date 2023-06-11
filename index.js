@@ -73,6 +73,7 @@ async function run() {
     const allClassesCollection = database.collection("allClasses");
     const selectedClassesCollection = database.collection("selectedClasses");
     const paymentHistoryClassesCollection = database.collection("paymentHistory");
+    const topInstructorCollection = database.collection("topInstructor");
 
 
 
@@ -152,6 +153,19 @@ async function run() {
      const query={userRoll: 'instructor'}
 
     const result= await allUsersCollection.find(query).toArray()
+
+    res.send(result)
+
+  });
+
+  // topInstructors get
+
+  app.get('/topInstructor',async(req,res)=>{
+
+
+    
+
+    const result= await topInstructorCollection.find().sort({totalEnroll: -1}).toArray()
 
     res.send(result)
 
@@ -727,6 +741,10 @@ app.post('/paymentHistory',verifyTokenJWT,async(req,res)=>{
 
 
    const paymentHistory= req.body;
+
+   const {instructorEmail,instructorName,instructorImage}=paymentHistory;
+
+   const instructorInfo={instructorEmail,instructorImage,instructorName,totalEnroll:1}
   // update seats
    const singleClass= await allClassesCollection.findOne({_id: new ObjectId(updateId)}) 
 
@@ -767,6 +785,38 @@ app.post('/paymentHistory',verifyTokenJWT,async(req,res)=>{
 
     if(deletedData.deletedCount>0){
 
+// todo
+  
+      const instructor= await topInstructorCollection.findOne({instructorEmail: instructorEmail})
+
+      if(!instructor){
+
+         const i= await topInstructorCollection.insertOne(instructorInfo);
+
+         const result =await paymentHistoryClassesCollection.insertOne(paymentHistory)
+
+         return res.send(result)
+
+      }
+
+
+
+  
+
+    const instructStudentCount=  instructor?.totalEnroll + 1
+
+   const filter={ instructorEmail: instructorEmail}
+
+   const updateRole = {
+     $set: {
+      totalEnroll: instructStudentCount
+
+
+     },
+
+    };
+
+     const i= await topInstructorCollection.updateOne(filter,updateRole);
 
       const result =await paymentHistoryClassesCollection.insertOne(paymentHistory)
 
