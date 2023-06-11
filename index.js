@@ -172,7 +172,7 @@ async function run() {
   });
 
 
-  // checkingUser
+  // checking User
 
   app.get('/checkingUser/:email',async(req,res)=>{
 
@@ -264,6 +264,25 @@ async function run() {
 
 
   });
+
+  // home data
+
+  app.get('/homeData',async(req,res)=>{
+
+    
+    const query ={status: 'approve'}
+     
+    const result= await allClassesCollection.find(query).sort({totalStudent: -1}).toArray();
+
+    res.send(result)
+
+
+
+  });
+
+
+
+
 
 
   // selected classes post
@@ -801,9 +820,35 @@ app.get('/enrollClasses/:email',verifyTokenJWT,async(req,res)=>{
 
 })
 
+// get paymentHistory
+
+app.get('/mayPaymentHistory/:email',verifyTokenJWT,async(req,res)=>{
 
 
 
+  const verifyEmail= req.decoded.email;
+
+
+   const userEmail= req.params.email;
+
+
+   if(verifyEmail !== userEmail){
+
+    return res.status(403).send({ error: true, message: ' email not match' })
+
+  
+   }
+
+   
+   const query={ email:userEmail}
+   
+  const result= await paymentHistoryClassesCollection.find(query).sort({date: -1}).toArray();
+
+  res.send(result)
+
+
+
+})
 
 
 
